@@ -241,15 +241,29 @@
   line-height: 1.2;
 }
 
-    #page-container, #scroll-container {
-      flex: 1;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 15px;
-      font-size: var(--reader-font-size);
-    }
+    #page-container {
+  flex: 1;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 15px;
+  font-size: var(--reader-font-size);
+  transition: opacity 0.2s ease-in-out;
+}
+
+#scroll-container {
+  flex: 1;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 25px;
+  font-size: var(--reader-font-size);
+  /* Natural window scrolling rules */
+  overflow: visible;
+  height: auto;
+}
     #page-container {
       transition: opacity 0.2s ease-in-out;
     }
