@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>သွေးနှင့် မီးလျှံ</title>
+  
+  <!-- PWA Manifest Link -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#121212">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <style>
+    /* Default: Dark Theme */
+    :root {
+      --bg: #121212;
+      --card-bg: #1e1e1e;
+      --text: #e0e0e0;
+      --text-muted: #888888;
+      --accent: #4caf50;
+      --border: #333333;
+      --toolbar-bg: #181818;
+      --select-bg: #222222;
+      --reader-font-size: 1rem;
+    }
+
+    /* Sepia Theme */
+    body.theme-sepia {
+      --bg: #f4ecd8;
+      --card-bg: #fbf0d9;
+      --text: #5f4b32;
+      --text-muted: #8d7355;
+      --accent: #8b5a2b;
+      --border: #dfd2b8;
+      --toolbar-bg: #eee4cc;
+      --select-bg: #f5ecd5;
+    }
+
+    /* Light Theme */
+    body.theme-light {
+      --bg: #f5f5f5;
+      --card-bg: #ffffff;
+      --text: #222222;
+      --text-muted: #666666;
+      --accent: #2e7d32;
+      --border: #e0e0e0;
+      --toolbar-bg: #eeeeee;
+      --select-bg: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Pyidaungsu", "Padauk", "Myanmar Text", "Noto Sans Myanmar", "Segoe UI", Roboto, sans-serif;
+      line-height: 2.1;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      overflow-x: hidden;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    h1, h2 { color: var(--text); margin-top: 0; }
+    .badge {
+      display: inline-block;
+      background: #2a2a2a;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 1.05rem;
+      color: #76ff03;
+      letter-spacing: 1px;
+      margin: 8px 0;
+      white-space: nowrap;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #252525;
+      color: #fff;
+      font-size: 1rem;
+      margin: 10px 0;
+    }
+    button {
+      padding: 10px 14px;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.5; }
+
+    /* Installation Box */
+    .install-guide-box {
+      margin-top: 18px;
+      background: #181818;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: #ccc;
+    }
+    .guide-title {
+      font-weight: bold;
+      color: #76ff03;
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #2a2a2a;
+      padding-bottom: 6px;
+    }
+    .guide-item {
+      margin-bottom: 8px;
+    }
+    .guide-item strong {
+      display: block;
+      color: #fff;
+      margin-bottom: 2px;
+    }
+    .guide-note {
+      font-size: 0.8rem;
+      color: #ff9800;
+      margin-top: 6px;
+    }
+    
+    .watermark-bg {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.05;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: space-around;
+      justify-content: space-around;
+      font-size: 14px;
+      transform: rotate(-25deg);
+      user-select: none;
+    }
+    .hidden { display: none !important; }
+    
+    /* Reader Layout */
+    #reader-view {
+      position: relative;
+      min-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 50px;
+    }
+    .nav-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 6px;
+      z-index: 10;
+    }
+    
+    .toolbar-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--toolbar-bg);
+  border: 1px solid var(--border);
+  padding: 6px 8px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  flex-wrap: nowrap;
+  gap: 4px;
+  white-space: nowrap;
+}
+.toolbar-options label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  font-size: 0.78rem;
+}
+.toolbar-options label input[type="checkbox"] {
+  margin: 0;
+  accent-color: var(--accent);
+}
+.font-controls {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+.font-controls button {
+  background: #333;
+  padding: 3px 7px;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  line-height: 1.2;
+}
+
+    #page-container, #scroll-container {
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 15px;
+      font-size: var(--reader-font-size);
+    }
+    #page-container {
+      transition: opacity 0.2s ease-in-out;
+    }
+
+    .chapter-title { 
+      color: var(--text);
+      border-bottom: 1px solid var(--border); 
+      padding-bottom: 10px; 
+      margin-bottom: 15px; 
+    }
+
+    .tap-instructions {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 5px;
+    }
+    
+    .page-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div id="watermark" class="watermark-bg"></div>
+
+  <div class="container">
+    <!-- ACTIVATION SCREEN -->
+    <div id="activation-view" class="card">
+      <h2>Book Activation</h2>
+      <p>ဤ Page ကို Screenshot ရိုက်၍ Page Messenger မှ ပို့ပေးပါ။</p>
+      
+      <label>Your Device ID:</label>
+      <div id="display-device-id" class="badge">Generating...</div>
+      
+      <p style="font-size: 0.85rem; color: #aaa;" id="display-device-info"></p>
+
+      <label>Enter Unlock Key:</label>
+      <input type="number" id="input-key" placeholder="Enter key from author..." />
+      <button id="btn-unlock" onclick="handleUnlock()" style="width: 100%;">Unlock & Download Book</button>
+      <p id="status-msg" style="color: #ff9800; font-size: 0.9rem;"></p>
+
+      <!-- INSTALLATION INSTRUCTIONS BOX -->
+      <div class="install-guide-box">
+        <div class="guide-title">📲 ဖုန်း Home Screen ပေါ်သို့ App ထည့်သွင်းနည်း</div>
+        
+        <div class="guide-item">
+          <strong>🤖 Android (Chrome) အသုံးပြုသူများ:</strong>
+          ညာဘက်အပေါ်ထောင့်ရှိ အစက်သုံးစက် (⋮) ကိုနှိပ်ပြီး <b>"Install app"</b> သို့မဟုတ် <b>"Add to Home screen"</b> ကို ရွေးချယ်ပါ။
+        </div>
+
+        <div class="guide-item">
+          <strong>🍏 iPhone / iPad (Safari) အသုံးပြုသူများ:</strong>
+          အောက်ခြေရှိ Share ခလုတ် (<span style="font-size:1.1rem;">⎙/⎋</span>) ကိုနှိပ်ပြီး အောက်သို့ဆွဲကာ <b>"Add to Home Screen"</b> ကို ရွေးချယ်ပါ။
+        </div>
+
+        <div class="guide-note">
+          ⚠️ <i>သတိပြုရန်: Home Screen ပေါ်သို့ ထည့်သွင်းပြီးမှသာ App ထဲသို့ဝင်၍ Unlock ပြုလုပ်ပေးပါက ပို၍ အဆင်ပြေပါသည်။</i>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOOK READER SCREEN -->
+    <div id="reader-view" class="hidden">
+      <div class="nav-header">
+        <button onclick="refreshBookContent()" style="background: #333; font-size: 0.8rem; padding: 6px 10px; width: auto;">Sync Updates</button>
+        <select id="chapter-select" onchange="changeChapter(this.value)" style="padding: 6px; background:var(--select-bg); color:var(--text); border:1px solid var(--border); border-radius:6px; max-width: 55%;"></select>
+      </div>
+
+      <!-- TOOLBAR: SINGLE-LINE COMPACT CONTROLS -->
+<div class="toolbar-options">
+  <label title="Toggle Paged Mode">
+    <input type="checkbox" id="mode-checkbox" onchange="toggleReadingMode()" /> Paged
+  </label>
+
+  <!-- Theme Selector (Removed 'Theme:' label) -->
+  <div style="display: flex; align-items: center;">
+    <select id="theme-select" onchange="setTheme(this.value)" style="padding: 2px 4px; background: var(--select-bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; font-size: 0.78rem;">
+      <option value="dark">Dark</option>
+      <option value="sepia">Sepia</option>
+      <option value="light">Light</option>
+    </select>
+  </div>
+
+  <!-- Font Controls (Removed 'Font:' label) -->
+  <div class="font-controls">
+    <button onclick="adjustFontSize(-0.1)" title="Decrease font size">A−</button>
+    <button onclick="adjustFontSize(0.1)" title="Increase font size">A+</button>
+  </div>
+</div>
+
+      <!-- PAGED MODE CONTAINER -->
+      <div id="page-container" onclick="handleScreenClick(event)">
+        <h2 id="page-title" class="chapter-title"></h2>
+        <div id="page-content"></div>
+      </div>
+
+      <!-- CONTINUOUS SCROLL MODE CONTAINER -->
+      <div id="scroll-container" class="hidden">
+        <h2 id="scroll-title" class="chapter-title"></h2>
+        <div id="scroll-content"></div>
+      </div>
+
+      <!-- PAGINATION FOOTER -->
+      <div id="paged-footer-area">
+        <div class="page-footer">
+          <button onclick="prevPage()" id="prev-btn" style="background: #333; padding: 6px 12px; font-size: 0.85rem; width: auto;">◀ Prev</button>
+          <span id="page-indicator">Page 1 of 1</span>
+          <button onclick="nextPage()" id="next-btn" style="background: #333; padding: 6px 12px; font-size: 0.85rem; width: auto;">Next ▶</button>
+        </div>
+        <div class="tap-instructions">Tip: Tap left or right side of the card to turn pages</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbxoMN3YjKQoXsLQ3pdneeZKI5T2R6SvwZQNRdW4NfE8lQjBrk5W1YkehUhT78XffF-orA/exec";
+
+    // --- INDEXEDDB STORAGE MANAGER ---
+    const DB_NAME = "BookReaderDB";
+    const DB_VERSION = 1;
+    const STORE_NAME = "book_data";
+
+    function openDatabase() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onupgradeneeded = (event) => {
+          const db = event.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            db.createObjectStore(STORE_NAME);
+          }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function saveBookToDB(chapters) {
+      const db = await openDatabase();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        const store = tx.objectStore(STORE_NAME);
+        store.put(chapters, "chapters");
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    async function loadBookFromDB() {
+      const db = await openDatabase();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, "readonly");
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.get("chapters");
+        request.onsuccess = () => resolve(request.result || null);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('copy', e => e.preventDefault());
+    document.addEventListener('cut', e => e.preventDefault());
+
+    // 15-Digit Device ID Logic
+    let deviceId = localStorage.getItem("dev_id");
+    if (!deviceId) {
+      const prefixNoise = Math.floor(10000 + Math.random() * 90000);
+      const coreId = Math.floor(10000 + Math.random() * 90000);
+      const suffixNoise = Math.floor(10000 + Math.random() * 90000);
+      deviceId = String(prefixNoise) + String(coreId) + String(suffixNoise);
+      localStorage.setItem("dev_id", deviceId);
+    }
+
+    function detectDevice() {
+      const ua = navigator.userAgent;
+      if (/android/i.test(ua)) return "Android Phone (" + screen.width + "x" + screen.height + ")";
+      if (/iPad|iPhone|iPod/.test(ua)) return "iOS Device (" + screen.width + "x" + screen.height + ")";
+      return "Desktop / Browser (" + navigator.platform + ")";
+    }
+
+    const deviceInfo = detectDevice();
+    const formattedIdDisplay = deviceId.slice(0, 5) + "-" + deviceId.slice(5, 10) + "-" + deviceId.slice(10);
+    document.getElementById("display-device-id").innerText = formattedIdDisplay;
+    document.getElementById("display-device-info").innerText = "Device: " + deviceInfo;
+    setupWatermark(deviceId);
+
+    // Font Controls
+    let currentFontSize = parseFloat(localStorage.getItem("reader_font_size")) || 1.0;
+    applyFontSize();
+
+    // Mode Toggle
+    let isPagedMode = localStorage.getItem("paged_mode") !== "false";
+    document.getElementById("mode-checkbox").checked = isPagedMode;
+
+    // Theme Management
+    function setTheme(theme) {
+      document.body.classList.remove('theme-sepia', 'theme-light');
+      if (theme === 'sepia') document.body.classList.add('theme-sepia');
+      if (theme === 'light') document.body.classList.add('theme-light');
+
+      const themeSelect = document.getElementById('theme-select');
+      if (themeSelect) themeSelect.value = theme;
+      localStorage.setItem('reader_theme', theme);
+
+      const metaTheme = document.querySelector('meta[name="theme-color"]');
+      if (metaTheme) {
+        if (theme === 'sepia') metaTheme.setAttribute('content', '#f4ecd8');
+        else if (theme === 'light') metaTheme.setAttribute('content', '#f5f5f5');
+        else metaTheme.setAttribute('content', '#121212');
+      }
+    }
+    const savedTheme = localStorage.getItem('reader_theme') || 'dark';
+    setTheme(savedTheme);
+
+    function adjustFontSize(delta) {
+      currentFontSize = Math.min(1.5, Math.max(0.8, currentFontSize + delta));
+      localStorage.setItem("reader_font_size", currentFontSize);
+      applyFontSize();
+      loadChapter(currentChapterIdx, currentPageIdx);
+    }
+
+    function applyFontSize() {
+      document.documentElement.style.setProperty('--reader-font-size', currentFontSize + 'rem');
+    }
+
+    // Auto-register device ID on backend
+    if (navigator.onLine) {
+      fetch(API_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ action: "register", deviceId: deviceId, deviceInfo: deviceInfo })
+      }).catch(err => console.log("Background registration error:", err));
+    }
+
+    async function handleUnlock() {
+      const key = document.getElementById("input-key").value.trim();
+      const status = document.getElementById("status-msg");
+      const btn = document.getElementById("btn-unlock");
+
+      if (!key) {
+        status.innerText = "Please enter the unlock key.";
+        return;
+      }
+
+      btn.disabled = true;
+      status.innerText = "Verifying with server...";
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify({ action: "download", deviceId: deviceId, unlockKey: key })
+        });
+        const result = await res.json();
+
+        if (result.success) {
+          localStorage.setItem("user_entered_key", key);
+          await saveBookToDB(result.chapters);
+          initReader(result.chapters);
+        } else {
+          status.innerText = result.error;
+          btn.disabled = false;
+        }
+      } catch (err) {
+        status.innerText = "Connection failed. Check your internet connection.";
+        btn.disabled = false;
+      }
+    }
+
+    let globalChapters = [];
+    let currentChapterIdx = 0;
+    let chapterPages = [];
+    let currentPageIdx = 0;
+
+    function initReader(chapters) {
+      globalChapters = chapters;
+      document.getElementById("activation-view").classList.add("hidden");
+      document.getElementById("reader-view").classList.remove("hidden");
+
+      const select = document.getElementById("chapter-select");
+      select.innerHTML = "";
+      chapters.forEach((chap, idx) => {
+        const opt = document.createElement("option");
+        opt.value = idx;
+        opt.innerText = chap.title;
+        select.appendChild(opt);
+      });
+
+      applyModeLayout();
+      const savedChap = parseInt(localStorage.getItem("bookmark_chap")) || 0;
+      const savedPage = parseInt(localStorage.getItem("bookmark_page")) || 0;
+      loadChapter(savedChap, savedPage);
+    }
+
+    function toggleReadingMode() {
+      isPagedMode = document.getElementById("mode-checkbox").checked;
+      localStorage.setItem("paged_mode", isPagedMode);
+      applyModeLayout();
+      loadChapter(currentChapterIdx, 0);
+    }
+
+    function applyModeLayout() {
+      const pageContainer = document.getElementById("page-container");
+      const scrollContainer = document.getElementById("scroll-container");
+      const footerArea = document.getElementById("paged-footer-area");
+
+      if (isPagedMode) {
+        pageContainer.classList.remove("hidden");
+        footerArea.classList.remove("hidden");
+        scrollContainer.classList.add("hidden");
+      } else {
+        pageContainer.classList.add("hidden");
+        footerArea.classList.add("hidden");
+        scrollContainer.classList.remove("hidden");
+      }
+    }
+
+    function loadChapter(chapIdx, pageIdx) {
+      currentChapterIdx = Number(chapIdx);
+      document.getElementById("chapter-select").value = currentChapterIdx;
+      const chap = globalChapters[currentChapterIdx];
+
+      if (isPagedMode) {
+        chapterPages = paginateContent(chap.content);
+        currentPageIdx = Math.max(0, Math.min(pageIdx, chapterPages.length - 1));
+        renderCurrentPage();
+      } else {
+        renderScrollChapter(chap);
+      }
+      saveBookmark();
+    }
+
+    function paginateContent(htmlContent) {
+      if (!htmlContent.includes("<p>") && !htmlContent.includes("<br>")) {
+        htmlContent = htmlContent
+          .split(/\r?\n\r?\n/)
+          .map(p => `<p style="margin-bottom: 1.2em;">${p.replace(/\r?\n/g, "<br>")}</p>`)
+          .join("");
+      }
+
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = htmlContent;
+      const paragraphs = Array.from(tempDiv.children);
+
+      if (paragraphs.length === 0) return [htmlContent];
+
+      let pages = [];
+      let currentPageHtml = "";
+      let currentLength = 0;
+      const MAX_CHARS_PER_PAGE = Math.floor(1300 / currentFontSize);
+
+      paragraphs.forEach(p => {
+        const pHtml = p.outerHTML;
+        if (currentLength + pHtml.length > MAX_CHARS_PER_PAGE && currentPageHtml !== "") {
+          pages.push(currentPageHtml);
+          currentPageHtml = pHtml;
+          currentLength = pHtml.length;
+        } else {
+          currentPageHtml += pHtml;
+          currentLength += pHtml.length;
+        }
+      });
+
+      if (currentPageHtml !== "") {
+        pages.push(currentPageHtml);
+      }
+
+      return pages;
+    }
+
+    function renderCurrentPage() {
+      const chap = globalChapters[currentChapterIdx];
+      const container = document.getElementById("page-container");
+      
+      container.style.opacity = "0";
+      setTimeout(() => {
+        document.getElementById("page-title").innerText = chap.title;
+        document.getElementById("page-content").innerHTML = chapterPages[currentPageIdx];
+        document.getElementById("page-indicator").innerText = `Page ${currentPageIdx + 1} of ${chapterPages.length}`;
+        
+        document.getElementById("prev-btn").disabled = (currentChapterIdx === 0 && currentPageIdx === 0);
+        document.getElementById("next-btn").disabled = (currentChapterIdx === globalChapters.length - 1 && currentPageIdx === chapterPages.length - 1);
+        
+        container.style.opacity = "1";
+        window.scrollTo(0, 0);
+      }, 150);
+    }
+
+    function renderScrollChapter(chap) {
+      let formattedContent = chap.content;
+      if (!formattedContent.includes("<p>") && !formattedContent.includes("<br>")) {
+        formattedContent = formattedContent
+          .split(/\r?\n\r?\n/)
+          .map(p => `<p style="margin-bottom: 1.2em;">${p.replace(/\r?\n/g, "<br>")}</p>`)
+          .join("");
+      }
+
+      document.getElementById("scroll-title").innerText = chap.title;
+      document.getElementById("scroll-content").innerHTML = formattedContent;
+      window.scrollTo(0, 0);
+    }
+
+    function saveBookmark() {
+      localStorage.setItem("bookmark_chap", currentChapterIdx);
+      localStorage.setItem("bookmark_page", currentPageIdx);
+    }
+
+    function nextPage() {
+      if (currentPageIdx < chapterPages.length - 1) {
+        currentPageIdx++;
+        renderCurrentPage();
+        saveBookmark();
+      } else if (currentChapterIdx < globalChapters.length - 1) {
+        loadChapter(currentChapterIdx + 1, 0);
+      }
+    }
+
+    function prevPage() {
+      if (currentPageIdx > 0) {
+        currentPageIdx--;
+        renderCurrentPage();
+        saveBookmark();
+      } else if (currentChapterIdx > 0) {
+        const prevChapIdx = currentChapterIdx - 1;
+        const prevPages = paginateContent(globalChapters[prevChapIdx].content);
+        loadChapter(prevChapIdx, prevPages.length - 1);
+      }
+    }
+
+    function handleScreenClick(event) {
+      if (!isPagedMode) return;
+      const rect = event.currentTarget.getBoundingClientRect();
+      const clickX = event.clientX - rect.left;
+      const width = rect.width;
+
+      if (clickX < width * 0.35) {
+        prevPage();
+      } else if (clickX > width * 0.65) {
+        nextPage();
+      }
+    }
+
+    function changeChapter(val) {
+      loadChapter(val, 0);
+    }
+
+    async function refreshBookContent() {
+      const savedKey = localStorage.getItem("user_entered_key");
+      if (!savedKey) {
+        alert("Unlock key not found locally.");
+        return;
+      }
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify({ action: "download", deviceId: deviceId, unlockKey: savedKey })
+        });
+        const result = await res.json();
+        if (result.success) {
+          await saveBookToDB(result.chapters);
+          globalChapters = result.chapters;
+          loadChapter(currentChapterIdx, currentPageIdx);
+          alert("Book updated successfully!");
+        } else {
+          alert("Update failed: " + result.error);
+        }
+      } catch (err) {
+        alert("Network error.");
+      }
+    }
+
+    function setupWatermark(id) {
+      const el = document.getElementById("watermark");
+      el.innerHTML = ("<span>Licensed to #" + id + "</span> ").repeat(60);
+    }
+
+    // Startup check: Load chapters asynchronously from IndexedDB
+    (async function initApp() {
+      try {
+        let storedChapters = await loadBookFromDB();
+
+        // Migration fallback: Import legacy localStorage data if present
+        if (!storedChapters) {
+          const legacy = localStorage.getItem("cached_chapters");
+          if (legacy) {
+            storedChapters = JSON.parse(legacy);
+            await saveBookToDB(storedChapters);
+            localStorage.removeItem("cached_chapters");
+          }
+        }
+
+        if (storedChapters && storedChapters.length > 0) {
+          initReader(storedChapters);
+        }
+      } catch (e) {
+        console.error("IndexedDB startup error:", e);
+      }
+    })();
+  </script>
+</body>
+</html>
