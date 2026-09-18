@@ -178,6 +178,29 @@
       gap: 6px;
       z-index: 10;
     }
+
+    /* Continuous Scroll Mode Scrollbar Styling */
+    #scroll-container {
+      max-height: 80vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: var(--accent) var(--toolbar-bg);
+    }
+
+    #scroll-container::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #scroll-container::-webkit-scrollbar-track {
+      background: var(--toolbar-bg);
+      border-radius: 4px;
+    }
+
+    #scroll-container::-webkit-scrollbar-thumb {
+      background: var(--accent);
+      border-radius: 4px;
+    }
     
     .toolbar-options {
   display: flex;
