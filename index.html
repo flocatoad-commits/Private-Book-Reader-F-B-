@@ -370,6 +370,13 @@
       <div id="scroll-container" class="hidden">
         <h2 id="scroll-title" class="chapter-title"></h2>
         <div id="scroll-content"></div>
+        
+        <!-- Long Mode Next Chapter Action Area -->
+        <div id="scroll-nav-area" style="margin-top: 35px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center;">
+          <button id="scroll-next-btn" onclick="nextChapterLongMode()" style="width: 100%; max-width: 300px; padding: 12px 18px; font-size: 0.95rem;">
+            နောက်တစ်ခန်း ဖတ်ရန် ▶
+          </button>
+        </div>
       </div>
 
       <!-- PAGINATION FOOTER -->
@@ -669,7 +676,28 @@
 
       document.getElementById("scroll-title").innerText = chap.title;
       document.getElementById("scroll-content").innerHTML = formattedContent;
+
+      // Handle Next Chapter button state in long mode
+      const nextBtn = document.getElementById("scroll-next-btn");
+      if (currentChapterIdx >= globalChapters.length - 1) {
+        nextBtn.innerText = "နောက်တစ်ခန်းကို ဆက်လက်ပြန်ဆိုနေပါသည်။";
+        nextBtn.disabled = true;
+        nextBtn.style.opacity = "0.5";
+      } else {
+        const nextChapterTitle = globalChapters[currentChapterIdx + 1].title;
+        nextBtn.innerText = `နောက်တစ်ခန်း (${nextChapterTitle}) ▶`;
+        nextBtn.disabled = false;
+        nextBtn.style.opacity = "1";
+      }
+
       window.scrollTo(0, 0);
+    }
+
+    function nextChapterLongMode() {
+      if (currentChapterIdx < globalChapters.length - 1) {
+        loadChapter(currentChapterIdx + 1, 0);
+        window.scrollTo(0, 0);
+      }
     }
 
     function saveBookmark() {
