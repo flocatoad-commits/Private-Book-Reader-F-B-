@@ -269,11 +269,14 @@
     }
 
     .chapter-title { 
-      color: var(--text);
-      border-bottom: 1px solid var(--border); 
-      padding-bottom: 10px; 
-      margin-bottom: 15px; 
-    }
+  color: var(--text);
+  border-bottom: 1px solid var(--border); 
+  padding-bottom: 10px; 
+  margin-bottom: 15px;
+  font-size: var(--reader-font-size);
+  font-weight: 700;
+  line-height: 1.5;
+}
 
     .tap-instructions {
       text-align: center;
@@ -334,7 +337,7 @@
     <!-- BOOK READER SCREEN -->
     <div id="reader-view" class="hidden">
       <div class="nav-header">
-        <button onclick="refreshBookContent()" style="background: #333; font-size: 0.8rem; padding: 6px 10px; width: auto;">Sync Updates</button>
+        <button id="btn-sync" onclick="refreshBookContent()" style="background: #333; font-size: 0.8rem; padding: 6px 10px; width: auto;">Sync Updates</button>
         <select id="chapter-select" onchange="changeChapter(this.value)" style="padding: 6px; background:var(--select-bg); color:var(--text); border:1px solid var(--border); border-radius:6px; max-width: 55%;"></select>
       </div>
 
@@ -745,31 +748,45 @@
     }
 
     async function refreshBookContent() {
-      const savedKey = localStorage.getItem("user_entered_key");
-      if (!savedKey) {
-        alert("Unlock key not found locally.");
-        return;
-      }
+  const savedKey = localStorage.getItem("user_entered_key");
+  const btn = document.getElementById("btn-sync");
+  if (!savedKey) {
+    alert("Unlock key not found locally.");
+    return;
+  }
 
-      try {
-        const res = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify({ action: "download", deviceId: deviceId, unlockKey: savedKey })
-        });
-        const result = await res.json();
-        if (result.success) {
-          await saveBookToDB(result.chapters);
-          globalChapters = result.chapters;
-          loadChapter(currentChapterIdx, currentPageIdx);
-          alert("Book updated successfully!");
-        } else {
-          alert("Update failed: " + result.error);
-        }
-      } catch (err) {
-        alert("Network error.");
-      }
+  // Provide immediate visual feedback
+  if (btn) {
+    btn.disabled = true;
+    btn.innerText = "Syncing...";
+    btn.style.opacity = "0.6";
+  }
+
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({ action: "download", deviceId: deviceId, unlockKey: savedKey })
+    });
+    const result = await res.json();
+    if (result.success) {
+      await saveBookToDB(result.chapters);
+      globalChapters = result.chapters;
+      loadChapter(currentChapterIdx, currentPageIdx);
+      alert("Book updated successfully!");
+    } else {
+      alert("Update failed: " + result.error);
     }
+  } catch (err) {
+    alert("Network error.");
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = "Sync Updates";
+      btn.style.opacity = "1";
+    }
+  }
+}
 
     function setupWatermark(id) {
       const el = document.getElementById("watermark");
