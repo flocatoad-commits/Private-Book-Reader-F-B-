@@ -1,3 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>သွေးနှင့် မီးလျှံ</title>
+  
+  <!-- PWA Manifest Link -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#121212">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <style>
+    /* Default: Dark Theme */
+    :root {
+      --bg: #121212;
+      --card-bg: #1e1e1e;
+      --text: #e0e0e0;
+      --text-muted: #888888;
+      --accent: #4caf50;
+      --border: #333333;
+      --toolbar-bg: #181818;
+      --select-bg: #222222;
+      --reader-font-size: 1rem;
+    }
+
+    /* Sepia Theme */
+    body.theme-sepia {
+      --bg: #f4ecd8;
+      --card-bg: #fbf0d9;
+      --text: #5f4b32;
+      --text-muted: #8d7355;
+      --accent: #8b5a2b;
+      --border: #dfd2b8;
+      --toolbar-bg: #eee4cc;
+      --select-bg: #f5ecd5;
+    }
+
+    /* Light Theme */
+    body.theme-light {
+      --bg: #f5f5f5;
+      --card-bg: #ffffff;
+      --text: #222222;
+      --text-muted: #666666;
+      --accent: #2e7d32;
+      --border: #e0e0e0;
+      --toolbar-bg: #eeeeee;
+      --select-bg: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Pyidaungsu", "Padauk", "Myanmar Text", "Noto Sans Myanmar", "Segoe UI", Roboto, sans-serif;
+      line-height: 2.1;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      overflow-x: hidden;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    h1, h2 { color: var(--text); margin-top: 0; }
+    .badge {
+      display: inline-block;
+      background: #2a2a2a;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 1.05rem;
+      color: #76ff03;
+      letter-spacing: 1px;
+      margin: 8px 0;
+      white-space: nowrap;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #252525;
+      color: #fff;
+      font-size: 1rem;
+      margin: 10px 0;
+    }
+    button {
+      padding: 10px 14px;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.5; }
+
+    /* Installation Box */
+    .install-guide-box {
+      margin-top: 18px;
+      background: #181818;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: #ccc;
+    }
+    .guide-title {
+      font-weight: bold;
+      color: #76ff03;
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #2a2a2a;
+      padding-bottom: 6px;
+    }
+    .guide-item {
+      margin-bottom: 8px;
+    }
+    .guide-item strong {
+      display: block;
+      color: #fff;
+      margin-bottom: 2px;
+    }
+    .guide-note {
+      font-size: 0.8rem;
+      color: #ff9800;
+      margin-top: 6px;
+    }
+    
+    .watermark-bg {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.05;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: space-around;
+      justify-content: space-around;
+      font-size: 14px;
+      transform: rotate(-25deg);
+      user-select: none;
+    }
+    .hidden { display: none !important; }
+    
+    /* Reader Layout */
+    #reader-view {
+      position: relative;
+      min-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 50px;
+    }
+    .nav-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 6px;
+      z-index: 10;
+    }
+
+    /* Continuous Scroll Mode Scrollbar Styling */
+    #scroll-container {
+      max-height: 80vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: var(--accent) var(--toolbar-bg);
+    }
+
+    #scroll-container::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #scroll-container::-webkit-scrollbar-track {
+      background: var(--toolbar-bg);
+      border-radius: 4px;
+    }
+
+    #scroll-container::-webkit-scrollbar-thumb {
+      background: var(--accent);
+      border-radius: 4px;
+    }
+    
+    .toolbar-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--toolbar-bg);
+  border: 1px solid var(--border);
+  padding: 6px 8px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  flex-wrap: nowrap;
+  gap: 4px;
+  white-space: nowrap;
+}
+.toolbar-options label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  font-size: 0.78rem;
+}
+.toolbar-options label input[type="checkbox"] {
+  margin: 0;
+  accent-color: var(--accent);
+}
+.font-controls {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+.font-controls button {
+  background: #333;
+  padding: 3px 7px;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  line-height: 1.2;
+}
+
+    #page-container {
+  flex: 1;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 15px;
+  font-size: var(--reader-font-size);
+  transition: opacity 0.2s ease-in-out;
+}
+
+#scroll-container {
+  flex: 1;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 25px;
+  font-size: var(--reader-font-size);
+  /* Natural window scrolling rules */
+  overflow: visible;
+  height: auto;
+}
+    #page-container {
+      transition: opacity 0.2s ease-in-out;
+    }
+
+    .chapter-title { 
+  color: var(--text);
+  border-bottom: 1px solid var(--border); 
+  padding-bottom: 10px; 
+  margin-bottom: 15px;
+  font-size: var(--reader-font-size);
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+    .tap-instructions {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 5px;
+    }
+    
+    .page-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div id="watermark" class="watermark-bg"></div>
+
+  <div class="container">
+    <!-- ACTIVATION SCREEN -->
+    <div id="activation-view" class="card">
+      <h2>Book Activation</h2>
+      <p>ဤ Page ကို Screenshot ရိုက်၍ Page Messenger မှ ပို့ပေးပါ။</p>
+      
+      <label>Your Device ID:</label>
+      <div id="display-device-id" class="badge">Generating...</div>
+      
+      <p style="font-size: 0.85rem; color: #aaa;" id="display-device-info"></p>
+
+      <label>Enter Unlock Key:</label>
+      <input type="number" id="input-key" placeholder="Enter key from author..." />
+      <button id="btn-unlock" onclick="handleUnlock()" style="width: 100%;">Unlock & Download Book</button>
+      <p id="status-msg" style="color: #ff9800; font-size: 0.9rem;"></p>
+
+      <!-- INSTALLATION INSTRUCTIONS BOX -->
+      <div class="install-guide-box">
+        <div class="guide-title">📲 ဖုန်း Home Screen ပေါ်သို့ App ထည့်သွင်းနည်း</div>
+        
+        <div class="guide-item">
+          <strong>🤖 Android (Chrome) အသုံးပြုသူများ:</strong>
+          ညာဘက်အပေါ်ထောင့်ရှိ အစက်သုံးစက် (⋮) ကိုနှိပ်ပြီး <b>"Install app"</b> သို့မဟုတ် <b>"Add to Home screen"</b> ကို ရွေးချယ်ပါ။
+        </div>
+
+        <div class="guide-item">
+          <strong>🍏 iPhone / iPad (Safari) အသုံးပြုသူများ:</strong>
+          အောက်ခြေရှိ Share ခလုတ် (<span style="font-size:1.1rem;">⎙/⎋</span>) ကိုနှိပ်ပြီး အောက်သို့ဆွဲကာ <b>"Add to Home Screen"</b> ကို ရွေးချယ်ပါ။
+        </div>
+
+        <div class="guide-note">
+          ⚠️ <i>သတိပြုရန်: Home Screen ပေါ်သို့ ထည့်သွင်းပြီးမှသာ App ထဲသို့ဝင်၍ Unlock ပြုလုပ်ပေးပါက ပို၍ အဆင်ပြေပါသည်။</i>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOOK READER SCREEN -->
+    <div id="reader-view" class="hidden">
+      <div class="nav-header">
+        <button id="btn-sync" onclick="refreshBookContent()" style="background: #333; font-size: 0.8rem; padding: 6px 10px; width: auto;">Sync Updates</button>
+        <select id="chapter-select" onchange="changeChapter(this.value)" style="padding: 6px; background:var(--select-bg); color:var(--text); border:1px solid var(--border); border-radius:6px; max-width: 55%;"></select>
+      </div>
+
+      <!-- TOOLBAR: SINGLE-LINE COMPACT CONTROLS -->
+<div class="toolbar-options">
+  <label title="Toggle Paged Mode">
+    <input type="checkbox" id="mode-checkbox" onchange="toggleReadingMode()" /> Paged
+  </label>
+
+  <!-- Theme Selector (Removed 'Theme:' label) -->
+  <div style="display: flex; align-items: center;">
+    <select id="theme-select" onchange="setTheme(this.value)" style="padding: 2px 4px; background: var(--select-bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; font-size: 0.78rem;">
+      <option value="dark">Dark</option>
+      <option value="sepia">Sepia</option>
+      <option value="light">Light</option>
+    </select>
+  </div>
+
+  <!-- Font Controls (Removed 'Font:' label) -->
+  <div class="font-controls">
+    <button onclick="adjustFontSize(-0.1)" title="Decrease font size">A−</button>
+    <button onclick="adjustFontSize(0.1)" title="Increase font size">A+</button>
+  </div>
+</div>
+
+      <!-- PAGED MODE CONTAINER -->
+      <div id="page-container" onclick="handleScreenClick(event)">
+        <h2 id="page-title" class="chapter-title"></h2>
+        <div id="page-content"></div>
+      </div>
+
+      <!-- CONTINUOUS SCROLL MODE CONTAINER -->
+      <div id="scroll-container" class="hidden">
+        <h2 id="scroll-title" class="chapter-title"></h2>
+        <div id="scroll-content"></div>
+        
+        <!-- Long Mode Next Chapter Action Area -->
+        <div id="scroll-nav-area" style="margin-top: 35px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center;">
+          <button id="scroll-next-btn" onclick="nextChapterLongMode()" style="width: 100%; max-width: 300px; padding: 12px 18px; font-size: 0.95rem;">
+            နောက်တစ်ခန်း ဖတ်ရန် ▶
+          </button>
+        </div>
+      </div>
+
+      <!-- PAGINATION FOOTER -->
+      <div id="paged-footer-area">
+        <div class="page-footer">
+          <button onclick="prevPage()" id="prev-btn" style="background: #333; padding: 6px 12px; font-size: 0.85rem; width: auto;">◀ Prev</button>
+          <span id="page-indicator">Page 1 of 1</span>
+          <button onclick="nextPage()" id="next-btn" style="background: #333; padding: 6px 12px; font-size: 0.85rem; width: auto;">Next ▶</button>
+        </div>
+        <div class="tap-instructions">Tip: Tap left or right side of the card to turn pages</div>
+      </div>
+    </div>
+  </div>
+
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbxoMN3YjKQoXsLQ3pdneeZKI5T2R6SvwZQNRdW4NfE8lQjBrk5W1YkehUhT78XffF-orA/exec";
 
