@@ -554,12 +554,9 @@
     let chapterPages = [];
     let currentPageIdx = 0;
 
-    function initReader(chapters) {
-      globalChapters = chapters;
-      document.getElementById("activation-view").classList.add("hidden");
-      document.getElementById("reader-view").classList.remove("hidden");
-
+    function populateChapterSelect(chapters) {
       const select = document.getElementById("chapter-select");
+      if (!select) return;
       select.innerHTML = "";
       chapters.forEach((chap, idx) => {
         const opt = document.createElement("option");
@@ -567,6 +564,14 @@
         opt.innerText = chap.title;
         select.appendChild(opt);
       });
+    }
+
+    function initReader(chapters) {
+      globalChapters = chapters;
+      document.getElementById("activation-view").classList.add("hidden");
+      document.getElementById("reader-view").classList.remove("hidden");
+
+      populateChapterSelect(chapters);
 
       applyModeLayout();
       const savedChap = parseInt(localStorage.getItem("bookmark_chap")) || 0;
@@ -772,8 +777,10 @@
     if (result.success) {
       await saveBookToDB(result.chapters);
       globalChapters = result.chapters;
+      populateChapterSelect(globalChapters); // Rebuilds the dropdown with all chapters
       loadChapter(currentChapterIdx, currentPageIdx);
       alert("Book updated successfully!");
+    }
     } else {
       alert("Update failed: " + result.error);
     }
