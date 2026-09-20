@@ -292,6 +292,51 @@
       font-size: 0.9rem;
       color: var(--text-muted);
     }
+
+    /* Scrubber Slider Container & Thumb */
+    .slider-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 12px;
+      gap: 4px;
+    }
+
+    #page-slider {
+      width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--border);
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* WebKit & iOS Thumb */
+    #page-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Firefox Thumb */
+    #page-slider::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+    
   </style>
 </head>
 <body>
@@ -386,7 +431,20 @@
       <div id="paged-footer-area">
         <div class="page-footer">
           <button onclick="prevPage()" id="prev-btn" style="background: #333; padding: 6px 12px; font-size: 0.85rem; width: auto;">◀ Prev</button>
-          <span id="page-indicator">Page 1 of 1</span>
+          
+          <div class="slider-container">
+            <span id="page-indicator">Page 1 of 1</span>
+            <input 
+              type="range" 
+              id="page-slider" 
+              min="1" 
+              max="1" 
+              value="1" 
+              oninput="handleSliderLive(this.value)" 
+              onchange="handleSliderRelease(this.value)" 
+            />
+          </div>
+
           <button onclick="nextPage()" id="next-btn" style="background: #333; padding: 6px 12px; font-size: 0.85rem; width: auto;">Next ▶</button>
         </div>
         <div class="tap-instructions">Tip: Tap left or right side of the card to turn pages</div>
@@ -689,12 +747,35 @@
         document.getElementById("page-content").innerHTML = chapterPages[currentPageIdx];
         document.getElementById("page-indicator").innerText = `Page ${currentPageIdx + 1} of ${chapterPages.length}`;
         
+        // Sync slider range and thumb position
+        const slider = document.getElementById("page-slider");
+        if (slider) {
+          slider.max = chapterPages.length;
+          slider.value = currentPageIdx + 1;
+        }
+
         document.getElementById("prev-btn").disabled = (currentChapterIdx === 0 && currentPageIdx === 0);
         document.getElementById("next-btn").disabled = (currentChapterIdx === globalChapters.length - 1 && currentPageIdx === chapterPages.length - 1);
         
         container.style.opacity = "1";
         window.scrollTo(0, 0);
       }, 150);
+    }
+
+    // Real-time visual feedback while scrubbing
+    function handleSliderLive(val) {
+      const targetPage = parseInt(val, 10);
+      document.getElementById("page-indicator").innerText = `Page ${targetPage} of ${chapterPages.length}`;
+    }
+
+    // Commits the page jump when the finger/mouse is released
+    function handleSliderRelease(val) {
+      const targetPage = parseInt(val, 10) - 1;
+      if (targetPage >= 0 && targetPage < chapterPages.length) {
+        currentPageIdx = targetPage;
+        renderCurrentPage();
+        saveBookmark();
+      }
     }
 
     function renderScrollChapter(chap) {
