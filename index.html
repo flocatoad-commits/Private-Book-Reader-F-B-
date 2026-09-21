@@ -11,6 +11,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
+  <!-- Google WebFont for Uniform Myanmar Script Rendering on iOS & Android -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Myanmar:wght@400;600;700&display=swap" rel="stylesheet">
+
   <style>
     /* Default: Dark Theme */
     :root {
@@ -58,8 +63,16 @@
       padding: 0;
       background: var(--bg);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Pyidaungsu", "Padauk", "Myanmar Text", "Noto Sans Myanmar", "Segoe UI", Roboto, sans-serif;
-      line-height: 2.1;
+      /* Prioritized Myanmar Unicode Typography */
+      font-family: "Noto Sans Myanmar", "Pyidaungsu", "Padauk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.95;
+      letter-spacing: 0.015em;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      word-break: normal;
+      overflow-wrap: break-word;
+      text-align: left;
       -webkit-user-select: none;
       user-select: none;
       -webkit-touch-callout: none;
@@ -179,104 +192,83 @@
       z-index: 10;
     }
 
-    /* Continuous Scroll Mode Scrollbar Styling */
-    #scroll-container {
-      max-height: 80vh;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: thin;
-      scrollbar-color: var(--accent) var(--toolbar-bg);
-    }
-
-    #scroll-container::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    #scroll-container::-webkit-scrollbar-track {
-      background: var(--toolbar-bg);
-      border-radius: 4px;
-    }
-
-    #scroll-container::-webkit-scrollbar-thumb {
-      background: var(--accent);
-      border-radius: 4px;
-    }
-    
     .toolbar-options {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--toolbar-bg);
-  border: 1px solid var(--border);
-  padding: 6px 8px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  flex-wrap: nowrap;
-  gap: 4px;
-  white-space: nowrap;
-}
-.toolbar-options label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  font-size: 0.78rem;
-}
-.toolbar-options label input[type="checkbox"] {
-  margin: 0;
-  accent-color: var(--accent);
-}
-.font-controls {
-  display: flex;
-  gap: 3px;
-  align-items: center;
-}
-.font-controls button {
-  background: #333;
-  padding: 3px 7px;
-  font-size: 0.75rem;
-  border-radius: 4px;
-  line-height: 1.2;
-}
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--toolbar-bg);
+      border: 1px solid var(--border);
+      padding: 6px 8px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      flex-wrap: nowrap;
+      gap: 4px;
+      white-space: nowrap;
+    }
+    .toolbar-options label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      font-size: 0.78rem;
+    }
+    .toolbar-options label input[type="checkbox"] {
+      margin: 0;
+      accent-color: var(--accent);
+    }
+    .font-controls {
+      display: flex;
+      gap: 3px;
+      align-items: center;
+    }
+    .font-controls button {
+      background: #333;
+      padding: 3px 7px;
+      font-size: 0.75rem;
+      border-radius: 4px;
+      line-height: 1.2;
+    }
 
     #page-container {
-  flex: 1;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 15px;
-  font-size: var(--reader-font-size);
-  transition: opacity 0.2s ease-in-out;
-}
-
-#scroll-container {
-  flex: 1;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 25px;
-  font-size: var(--reader-font-size);
-  /* Natural window scrolling rules */
-  overflow: visible;
-  height: auto;
-}
-    #page-container {
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 15px;
+      font-size: var(--reader-font-size);
       transition: opacity 0.2s ease-in-out;
     }
 
+    #scroll-container {
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 25px;
+      font-size: var(--reader-font-size);
+      overflow: visible;
+      height: auto;
+    }
+
+    /* Paragraph Typography Styling */
+    #page-content p, #scroll-content p {
+      margin: 0 0 1.2em 0;
+      text-indent: 1.4em;
+    }
+
     .chapter-title { 
-  color: var(--text);
-  border-bottom: 1px solid var(--border); 
-  padding-bottom: 10px; 
-  margin-bottom: 15px;
-  font-size: var(--reader-font-size);
-  font-weight: 700;
-  line-height: 1.5;
-}
+      color: var(--text);
+      border-bottom: 1px solid var(--border); 
+      padding-bottom: 10px; 
+      margin-bottom: 15px; 
+      font-size: var(--reader-font-size);
+      font-weight: 700;
+      line-height: 1.5;
+    }
 
     .tap-instructions {
       text-align: center;
@@ -336,7 +328,6 @@
       border: none;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
     }
-    
   </style>
 </head>
 <body>
@@ -387,26 +378,26 @@
       </div>
 
       <!-- TOOLBAR: SINGLE-LINE COMPACT CONTROLS -->
-<div class="toolbar-options">
-  <label title="Toggle Paged Mode">
-    <input type="checkbox" id="mode-checkbox" onchange="toggleReadingMode()" /> Paged
-  </label>
+      <div class="toolbar-options">
+        <label title="Toggle Paged Mode">
+          <input type="checkbox" id="mode-checkbox" onchange="toggleReadingMode()" /> Paged
+        </label>
 
-  <!-- Theme Selector (Removed 'Theme:' label) -->
-  <div style="display: flex; align-items: center;">
-    <select id="theme-select" onchange="setTheme(this.value)" style="padding: 2px 4px; background: var(--select-bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; font-size: 0.78rem;">
-      <option value="dark">Dark</option>
-      <option value="sepia">Sepia</option>
-      <option value="light">Light</option>
-    </select>
-  </div>
+        <!-- Theme Selector -->
+        <div style="display: flex; align-items: center;">
+          <select id="theme-select" onchange="setTheme(this.value)" style="padding: 2px 4px; background: var(--select-bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; font-size: 0.78rem;">
+            <option value="dark">Dark</option>
+            <option value="sepia">Sepia</option>
+            <option value="light">Light</option>
+          </select>
+        </div>
 
-  <!-- Font Controls (Removed 'Font:' label) -->
-  <div class="font-controls">
-    <button onclick="adjustFontSize(-0.1)" title="Decrease font size">A−</button>
-    <button onclick="adjustFontSize(0.1)" title="Increase font size">A+</button>
-  </div>
-</div>
+        <!-- Font Controls -->
+        <div class="font-controls">
+          <button onclick="adjustFontSize(-0.1)" title="Decrease font size">A−</button>
+          <button onclick="adjustFontSize(0.1)" title="Increase font size">A+</button>
+        </div>
+      </div>
 
       <!-- PAGED MODE CONTAINER -->
       <div id="page-container" onclick="handleScreenClick(event)">
@@ -452,7 +443,7 @@
     </div>
   </div>
 
-<script>
+  <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbxoMN3YjKQoXsLQ3pdneeZKI5T2R6SvwZQNRdW4NfE8lQjBrk5W1YkehUhT78XffF-orA/exec";
 
     // 1. Immediate Context & Device ID Setup (Runs before any async tasks)
@@ -703,7 +694,7 @@
       if (!htmlContent.includes("<p>") && !htmlContent.includes("<br>")) {
         htmlContent = htmlContent
           .split(/\r?\n\r?\n/)
-          .map(p => `<p style="margin-bottom: 1.2em;">${p.replace(/\r?\n/g, "<br>")}</p>`)
+          .map(p => `<p>${p.replace(/\r?\n/g, "<br>")}</p>`)
           .join("");
       }
 
@@ -783,7 +774,7 @@
       if (!formattedContent.includes("<p>") && !formattedContent.includes("<br>")) {
         formattedContent = formattedContent
           .split(/\r?\n\r?\n/)
-          .map(p => `<p style="margin-bottom: 1.2em;">${p.replace(/\r?\n/g, "<br>")}</p>`)
+          .map(p => `<p>${p.replace(/\r?\n/g, "<br>")}</p>`)
           .join("");
       }
 
@@ -921,3 +912,5 @@
       }
     })();
   </script>
+</body>
+</html>
