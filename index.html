@@ -92,28 +92,6 @@
       margin-bottom: 20px;
     }
     h1, h2 { color: var(--text); margin-top: 0; }
-    .badge {
-      display: inline-block;
-      background: #2a2a2a;
-      padding: 8px 14px;
-      border-radius: 6px;
-      font-family: monospace;
-      font-size: 1.05rem;
-      color: #76ff03;
-      letter-spacing: 1px;
-      margin: 8px 0;
-      white-space: nowrap;
-    }
-    input {
-      width: 100%;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: #252525;
-      color: #fff;
-      font-size: 1rem;
-      margin: 10px 0;
-    }
     button {
       padding: 10px 14px;
       border: none;
@@ -335,20 +313,11 @@
   <div id="watermark" class="watermark-bg"></div>
 
   <div class="container">
-    <!-- ACTIVATION SCREEN -->
+    <!-- LOADING / INSTALL SCREEN -->
     <div id="activation-view" class="card">
-      <h2>Book Activation</h2>
-      <p>ဤ Page ကို Screenshot ရိုက်၍ Page Messenger မှ ပို့ပေးပါ။</p>
-      
-      <label>Your Device ID:</label>
-      <div id="display-device-id" class="badge">Generating...</div>
-      
-      <p style="font-size: 0.85rem; color: #aaa;" id="display-device-info"></p>
-
-      <label>Enter Unlock Key:</label>
-      <input type="number" id="input-key" placeholder="Enter key from author..." />
-      <button id="btn-unlock" onclick="handleUnlock()" style="width: 100%;">Unlock & Download Book</button>
-      <p id="status-msg" style="color: #ff9800; font-size: 0.9rem;"></p>
+      <h2>သွေးနှင့် မီးလျှံ</h2>
+      <p id="status-msg" style="color: #ff9800; font-size: 0.95rem;">စာအုပ်ဒေါင်းလုဒ်ဆွဲနေပါသည်...</p>
+      <button id="btn-unlock" onclick="downloadBook()" class="hidden" style="width: 100%; margin-top: 10px;">Retry Download</button>
 
       <!-- INSTALLATION INSTRUCTIONS BOX -->
       <div class="install-guide-box">
@@ -365,7 +334,7 @@
         </div>
 
         <div class="guide-note">
-          ⚠️ <i>သတိပြုရန်: Home Screen ပေါ်သို့ ထည့်သွင်းပြီးမှသာ App ထဲသို့ဝင်၍ Screenshot ပို့ပေးပါက ပို၍ အဆင်ပြေပါသည်။</i>
+          ⚠️ <i>သတိပြုရန်: Home Screen ပေါ်သို့ ထည့်သွင်းပြီးမှသာ App ထဲသို့ဝင်၍ ဖတ်ရှုပါက အင်တာနက်မလိုဘဲ Offline ဖတ်ရှုနိုင်ပါသည်။</i>
         </div>
       </div>
     </div>
@@ -468,18 +437,10 @@
     }
 
     const deviceInfo = detectDevice();
-    const formattedIdDisplay = deviceId.slice(0, 5) + "-" + deviceId.slice(5, 10) + "-" + deviceId.slice(10);
-    
-    // Ensure Device ID is populated immediately into DOM
-    const idEl = document.getElementById("display-device-id");
-    if (idEl) idEl.innerText = formattedIdDisplay;
-    
-    const infoEl = document.getElementById("display-device-info");
-    if (infoEl) infoEl.innerText = "Device: " + deviceInfo;
 
     function setupWatermark(id) {
       const el = document.getElementById("watermark");
-      if (el) el.innerHTML = ("<span>Licensed to #" + id + "</span> ").repeat(60);
+      if (el) el.innerHTML = ("<span>Reader #" + id + "</span> ").repeat(60);
     }
     setupWatermark(deviceId);
 
@@ -583,39 +544,36 @@
       }
     }
 
-    // 5. Activation & Download Logic
-    async function handleUnlock() {
-      const key = document.getElementById("input-key").value.trim();
+    // 5. Auto-Download Logic (No Key Required)
+    async function downloadBook() {
       const status = document.getElementById("status-msg");
       const btn = document.getElementById("btn-unlock");
 
-      if (!key) {
-        status.innerText = "Please enter the unlock key.";
-        return;
-      }
-
-      btn.disabled = true;
-      status.innerText = "Verifying with server...";
+      if (btn) btn.classList.add("hidden");
+      if (status) status.innerText = "စာအုပ်ဒေါင်းလုဒ်ဆွဲနေပါသည်... (Downloading book...)";
 
       try {
         const res = await fetch(API_URL, {
           method: "POST",
           headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify({ action: "download", deviceId: deviceId, unlockKey: key })
+          body: JSON.stringify({
+            action: "download",
+            deviceId: deviceId,
+            deviceInfo: deviceInfo
+          })
         });
         const result = await res.json();
 
         if (result.success) {
-          localStorage.setItem("user_entered_key", key);
           await saveBookToDB(result.chapters);
           initReader(result.chapters);
         } else {
-          status.innerText = result.error;
-          btn.disabled = false;
+          if (status) status.innerText = result.error || "Download failed.";
+          if (btn) btn.classList.remove("hidden");
         }
       } catch (err) {
-        status.innerText = "Connection failed. Check your internet connection.";
-        btn.disabled = false;
+        if (status) status.innerText = "Connection failed. Check your internet connection.";
+        if (btn) btn.classList.remove("hidden");
       }
     }
 
@@ -850,12 +808,7 @@
     }
 
     async function refreshBookContent() {
-      const savedKey = localStorage.getItem("user_entered_key");
       const btn = document.getElementById("btn-sync");
-      if (!savedKey) {
-        alert("Unlock key not found locally.");
-        return;
-      }
 
       if (btn) {
         btn.disabled = true;
@@ -867,7 +820,11 @@
         const res = await fetch(API_URL, {
           method: "POST",
           headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify({ action: "download", deviceId: deviceId, unlockKey: savedKey })
+          body: JSON.stringify({
+            action: "download",
+            deviceId: deviceId,
+            deviceInfo: deviceInfo
+          })
         });
         const result = await res.json();
         if (result.success) {
@@ -890,7 +847,7 @@
       }
     }
 
-    // 7. Startup Check: Load saved chapters from IndexedDB
+    // 7. Startup Check: Load saved chapters from IndexedDB or auto-download
     (async function initApp() {
       try {
         let storedChapters = await loadBookFromDB();
@@ -906,6 +863,8 @@
 
         if (storedChapters && storedChapters.length > 0) {
           initReader(storedChapters);
+        } else {
+          await downloadBook();
         }
       } catch (e) {
         console.error("Startup error:", e);
